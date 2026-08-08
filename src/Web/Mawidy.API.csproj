@@ -19,7 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Mawidy.Infrastructure\Mawidy.Infrastructure.csproj" />
+    <ProjectReference Include="..\Infrastructure\Mawidy.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

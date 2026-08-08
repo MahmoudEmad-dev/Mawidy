@@ -132,7 +132,7 @@ app.UseHttpsRedirection();
 
 // Static files: configurable frontend path with relative default
 var frontendPath = builder.Configuration["FrontendPath"]
-    ?? Path.GetFullPath(Path.Combine(builder.Environment.ContentRootPath, "..", "..", "Mawidy-frontend"));
+    ?? Path.GetFullPath(Path.Combine(builder.Environment.ContentRootPath, "..", "..", "..", "Mawidy-frontend"));
 
 if (Directory.Exists(frontendPath))
 {

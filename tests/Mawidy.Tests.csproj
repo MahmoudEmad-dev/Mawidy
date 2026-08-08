@@ -20,10 +20,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Mawidy.Domain\Mawidy.Domain.csproj" />
-    <ProjectReference Include="..\Mawidy.Application\Mawidy.Application.csproj" />
-    <ProjectReference Include="..\Mawidy.Infrastructure\Mawidy.Infrastructure.csproj" />
-    <ProjectReference Include="..\Mawidy.API\Mawidy.API.csproj" />
+    <ProjectReference Include="..\src\Domain\Mawidy.Domain.csproj" />
+    <ProjectReference Include="..\src\Application\Mawidy.Application.csproj" />
+    <ProjectReference Include="..\src\Infrastructure\Mawidy.Infrastructure.csproj" />
+    <ProjectReference Include="..\src\Web\Mawidy.API.csproj" />
   </ItemGroup>
-
 </Project>
