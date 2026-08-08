@@ -1,16 +1,11 @@
+using Mawidy.Application;
+using Mawidy.Infrastructure;
 using Mawidy.Infrastructure.Persistence;
 using Mawidy.Domain.Entities;
 using Mawidy.Domain.Enums;
-using Mawidy.Infrastructure.Persistence.Repositories;
-using Mawidy.Application.Interfaces;
-using Mawidy.Application.Services;
-using Microsoft.Extensions.FileProviders;
-using Mawidy.Infrastructure.Services;
-using Mawidy.Application.Banks.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using QuestPDF.Infrastructure;
@@ -23,34 +18,11 @@ var builder = WebApplication.CreateBuilder(args);
 // QuestPDF License
 QuestPDF.Settings.License = LicenseType.Community;
 
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("MyConnection")));
+// ── Application & Infrastructure DI ─────────────────────────────────────
+builder.Services.AddApplicationServices();
+builder.Services.AddInfrastructureServices(builder.Configuration);
 
-
-
-builder.Services.AddScoped<IAppDbContext>(provider =>
-    provider.GetRequiredService<AppDbContext>());
-
-builder.Services.AddScoped<IApplicationDbContext>(provider =>
-    provider.GetRequiredService<AppDbContext>());
-
-builder.Services.AddMediatR(cfg =>
-    cfg.RegisterServicesFromAssembly(typeof(Mawidy.Application.Features.Courts.Queries.GetCourtsQuery).Assembly));
-
-builder.Services.AddHostedService<ReminderService>();
-
-// Identity
-builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
-{
-    options.Password.RequireDigit = true;
-    options.Password.RequiredLength = 8;
-    options.Password.RequireUppercase = false;
-    options.SignIn.RequireConfirmedEmail = true;
-})
-.AddEntityFrameworkStores<AppDbContext>()
-.AddDefaultTokenProviders();
-
-// JWT
+// ── JWT Authentication ──────────────────────────────────────────────────
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
 var secretKey = jwtSettings["SecretKey"]!;
 
@@ -87,7 +59,7 @@ builder.Services.AddAuthentication(options =>
     options.ExpireTimeSpan = TimeSpan.FromHours(8);
 });
 
-// CORS
+// ── CORS ────────────────────────────────────────────────────────────────
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
@@ -103,36 +75,11 @@ builder.Services.AddCors(options =>
     });
 });
 
-// Services
-builder.Services.Configure<EmailSettings>(
-    builder.Configuration.GetSection("EmailSettings"));
-builder.Services.AddScoped<IEmailService, EmailService>();
-builder.Services.AddScoped<IJwtService, JwtService>();
-builder.Services.AddScoped<IQRService, QRService>();
-builder.Services.AddScoped<IPdfReportService, PdfReportService>();
-builder.Services.AddScoped<IPeakTimeService, PeakTimeService>();
-builder.Services.AddScoped<IAppointmentAvailabilityService, AppointmentAvailabilityService>();
-builder.Services.AddHostedService<AppointmentCompletionService>();
-builder.Services.AddScoped<IBranchService, BranchService>();
-builder.Services.AddScoped<IAppointmentService, AppointmentService>();
-builder.Services.AddScoped<IAdminService, AdminService>();
-
-// Repositories
-builder.Services.AddScoped<IAppointmentRepository, AppointmentRepository>();
-builder.Services.AddScoped<IBranchRepository, BranchRepository>();
-builder.Services.AddScoped<IComplaintRepository, ComplaintRepository>();
-builder.Services.AddScoped<IRatingRepository, RatingRepository>();
-
-// Banks & Hospitals Services
+// ── MVC, SignalR, Swagger ───────────────────────────────────────────────
 builder.Services.AddHttpContextAccessor();
-builder.Services.AddScoped<LocalizationService>();
-
-// SignalR
 builder.Services.AddSignalR();
-
 builder.Services.AddControllersWithViews();
 
-// Swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
@@ -171,61 +118,10 @@ builder.Services.AddSwaggerGen(options =>
 
 var app = builder.Build();
 
-// Seed Roles and Admin
-using (var scope = app.Services.CreateScope())
-{
-    var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    await DbInitializer.SeedAsync(context);
+// ── Seed Roles, Admin & Test Users ──────────────────────────────────────
+await SeedDatabaseAsync(app);
 
-    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
-
-    string[] roles = { Roles.Admin, Roles.BranchAdmin, Roles.Citizen };
-    foreach (var role in roles)
-    {
-        if (!await roleManager.RoleExistsAsync(role))
-            await roleManager.CreateAsync(new IdentityRole(role));
-    }
-
-    var adminEmail = "admin@civil.com";
-    var adminUser = await userManager.FindByEmailAsync(adminEmail);
-
-    if (adminUser == null)
-    {
-        adminUser = new ApplicationUser
-        {
-            FirstName = "المدير",
-            LastName = "العام",
-            NationalId = "00000000000000",
-            UserName = adminEmail,
-            Email = adminEmail,
-            PhoneNumber = "01000000000",
-            EmailConfirmed = true,
-            DateOfBirth = new DateTime(1990, 1, 1)
-        };
-
-        await userManager.CreateAsync(adminUser, "Test@1234");
-        await userManager.AddToRoleAsync(adminUser, Roles.Admin);    var testEmail = "test@mawidy.com";
-    var testUser = await userManager.FindByEmailAsync(testEmail);
-    if (testUser == null)
-    {
-        testUser = new ApplicationUser
-        {
-            FirstName = "Test",
-            LastName = "User",
-            NationalId = "11111111111111",
-            UserName = testEmail,
-            Email = testEmail,
-            PhoneNumber = "01111111111",
-            EmailConfirmed = true,
-            DateOfBirth = new DateTime(1995, 1, 1)
-        };
-        await userManager.CreateAsync(testUser, "Test@1234");
-        await userManager.AddToRoleAsync(testUser, Roles.Citizen);
-    }
-    }
-}
-
+// ── Middleware Pipeline ─────────────────────────────────────────────────
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -234,26 +130,31 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-// Serve static files from Mawidy-frontend first to ensure frontend changes are reflected instantly
-app.UseStaticFiles(new StaticFileOptions
+// Static files: configurable frontend path with relative default
+var frontendPath = builder.Configuration["FrontendPath"]
+    ?? Path.GetFullPath(Path.Combine(builder.Environment.ContentRootPath, "..", "..", "Mawidy-frontend"));
+
+if (Directory.Exists(frontendPath))
 {
-    FileProvider = new PhysicalFileProvider(@"f:\DEPIProject\Mawidy-frontend"),
-    RequestPath = ""
-});
+    app.UseStaticFiles(new StaticFileOptions
+    {
+        FileProvider = new PhysicalFileProvider(frontendPath),
+        RequestPath = ""
+    });
+
+    var fileServerOptions = new FileServerOptions
+    {
+        FileProvider = new PhysicalFileProvider(frontendPath),
+        RequestPath = "",
+        EnableDefaultFiles = true
+    };
+    fileServerOptions.DefaultFilesOptions.DefaultFileNames.Clear();
+    fileServerOptions.DefaultFilesOptions.DefaultFileNames.Add("index.html");
+    app.UseFileServer(fileServerOptions);
+}
 
 // Backend wwwroot → serves CSS/JS for Razor views (~/css/site.css, ~/js/branches.js …)
 app.UseStaticFiles();
-
-// Frontend folder → serves index.html and other HTML pages
-var fileServerOptions = new FileServerOptions
-{
-    FileProvider = new PhysicalFileProvider(@"f:\DEPIProject\Mawidy-frontend"),
-    RequestPath = "",
-    EnableDefaultFiles = true
-};
-fileServerOptions.DefaultFilesOptions.DefaultFileNames.Clear();
-fileServerOptions.DefaultFilesOptions.DefaultFileNames.Add("index.html");
-app.UseFileServer(fileServerOptions);
 
 app.UseCors("AllowFrontend");
 app.UseAuthentication();
@@ -288,10 +189,59 @@ app.MapHub<Mawidy.API.Hubs.Hospitals.ReservationHub>("/hubs/reservation");
 
 app.Run();
 
+// ═════════════════════════════════════════════════════════════════════════
+// Local helper: database seeding
+// ═════════════════════════════════════════════════════════════════════════
+static async Task SeedDatabaseAsync(WebApplication app)
+{
+    using var scope = app.Services.CreateScope();
+    var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    await DbInitializer.SeedAsync(context);
 
+    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
 
+    string[] roles = { Roles.Admin, Roles.BranchAdmin, Roles.Citizen };
+    foreach (var role in roles)
+    {
+        if (!await roleManager.RoleExistsAsync(role))
+            await roleManager.CreateAsync(new IdentityRole(role));
+    }
 
+    await EnsureUserAsync(userManager, new ApplicationUser
+    {
+        FirstName = "المدير",
+        LastName = "العام",
+        NationalId = "00000000000000",
+        UserName = "admin@civil.com",
+        Email = "admin@civil.com",
+        PhoneNumber = "01000000000",
+        EmailConfirmed = true,
+        DateOfBirth = new DateTime(1990, 1, 1)
+    }, "Test@1234", Roles.Admin);
 
+    await EnsureUserAsync(userManager, new ApplicationUser
+    {
+        FirstName = "Test",
+        LastName = "User",
+        NationalId = "11111111111111",
+        UserName = "test@mawidy.com",
+        Email = "test@mawidy.com",
+        PhoneNumber = "01111111111",
+        EmailConfirmed = true,
+        DateOfBirth = new DateTime(1995, 1, 1)
+    }, "Test@1234", Roles.Citizen);
+}
 
+static async Task EnsureUserAsync(
+    UserManager<ApplicationUser> userManager,
+    ApplicationUser template,
+    string password,
+    string role)
+{
+    var existing = await userManager.FindByEmailAsync(template.Email!);
+    if (existing != null) return;
 
-
+    await userManager.CreateAsync(template, password);
+    await userManager.AddToRoleAsync(template, role);
+}

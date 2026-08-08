@@ -4,10 +4,11 @@ using Mawidy.Application.Interfaces;
 
 namespace Mawidy.Infrastructure.Persistence;
 
-public class TelecomDbContext : DbContext, IAppDbContext
+public class TelecomDbContext : DbContext, IApplicationDbContext
 {
     public TelecomDbContext(DbContextOptions<TelecomDbContext> options) : base(options) { }
 
+    // ── Civil Registry / Telecom (primary for this context) ──────────────
     public DbSet<Operator>          Operators           => Set<Operator>();
     public DbSet<Branch>            Branches            => Set<Branch>();
     public DbSet<Governorate>       Governorates        => Set<Governorate>();
@@ -16,6 +17,26 @@ public class TelecomDbContext : DbContext, IAppDbContext
     public DbSet<ServiceDocument>   ServiceDocuments    => Set<ServiceDocument>();
     public DbSet<Appointment>       Appointments        => Set<Appointment>();
     public DbSet<VirtualQueueEntry> VirtualQueueEntries => Set<VirtualQueueEntry>();
+
+    // ── Courts ──────────────────────────────────────────────────────────
+    public DbSet<Court>              Courts             => Set<Court>();
+    public DbSet<CourtDepartment>    CourtDepartments   => Set<CourtDepartment>();
+    public DbSet<CourtService>       CourtServices      => Set<CourtService>();
+    public DbSet<Booking>            Bookings           => Set<Booking>();
+    public DbSet<LegalCase>          LegalCases         => Set<LegalCase>();
+    public DbSet<CaseTimelineEvent>  CaseTimelineEvents => Set<CaseTimelineEvent>();
+    public DbSet<QueueTicket>        QueueTickets       => Set<QueueTicket>();
+
+    // ── Banks ───────────────────────────────────────────────────────────
+    public DbSet<Mawidy.Domain.Entities.Banks.Service> BankServices => Set<Mawidy.Domain.Entities.Banks.Service>();
+
+    // ── Hospitals ────────────────────────────────────────────────────────
+    public DbSet<Mawidy.Domain.Entities.Hospitals.Hospitals>      Hospitals              => Set<Mawidy.Domain.Entities.Hospitals.Hospitals>();
+    public DbSet<Mawidy.Domain.Entities.Hospitals.Beds>           HospitalBeds           => Set<Mawidy.Domain.Entities.Hospitals.Beds>();
+    public DbSet<Mawidy.Domain.Entities.Hospitals.BedTypes>       HospitalBedTypes       => Set<Mawidy.Domain.Entities.Hospitals.BedTypes>();
+    public DbSet<Mawidy.Domain.Entities.Hospitals.Reservations>   HospitalReservations   => Set<Mawidy.Domain.Entities.Hospitals.Reservations>();
+    public DbSet<Mawidy.Domain.Entities.Hospitals.BlockedPhones>  HospitalBlockedPhones  => Set<Mawidy.Domain.Entities.Hospitals.BlockedPhones>();
+    public DbSet<Mawidy.Domain.Entities.Hospitals.Reports>        HospitalReports        => Set<Mawidy.Domain.Entities.Hospitals.Reports>();
 
     protected override void OnModelCreating(ModelBuilder mb)
     {
@@ -133,3 +154,4 @@ public class TelecomDbContext : DbContext, IAppDbContext
         SeedData.SeedAll(mb);
     }
 }
+

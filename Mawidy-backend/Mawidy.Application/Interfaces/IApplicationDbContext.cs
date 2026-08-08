@@ -3,26 +3,41 @@ using Mawidy.Domain.Entities;
 
 namespace Mawidy.Application.Interfaces;
 
+/// <summary>
+/// Unified database context interface exposing all DbSets for the application.
+/// Replaces the former IAppDbContext and IApplicationDbContext split.
+/// </summary>
 public interface IApplicationDbContext
 {
-    DbSet<Court> Courts { get; set; }
-    DbSet<CourtDepartment> CourtDepartments { get; set; }
-    DbSet<CourtService> CourtServices { get; set; }
-    DbSet<Booking> Bookings { get; set; }
-    DbSet<LegalCase> LegalCases { get; set; }
-    DbSet<CaseTimelineEvent> CaseTimelineEvents { get; set; }
-    DbSet<QueueTicket> QueueTickets { get; set; }
+    // ── Civil Registry / Telecom ─────────────────────────────────────────
+    DbSet<Operator>          Operators           { get; }
+    DbSet<Branch>            Branches            { get; }
+    DbSet<Governorate>       Governorates        { get; }
+    DbSet<District>          Districts           { get; }
+    DbSet<OperatorService>   OperatorServices    { get; }
+    DbSet<ServiceDocument>   ServiceDocuments    { get; }
+    DbSet<Appointment>       Appointments        { get; }
+    DbSet<VirtualQueueEntry> VirtualQueueEntries { get; }
 
-    // Banks
-    DbSet<Mawidy.Domain.Entities.Banks.Service> BankServices { get; set; }
+    // ── Courts ──────────────────────────────────────────────────────────
+    DbSet<Court> Courts { get; }
+    DbSet<CourtDepartment> CourtDepartments { get; }
+    DbSet<CourtService> CourtServices { get; }
+    DbSet<Booking> Bookings { get; }
+    DbSet<LegalCase> LegalCases { get; }
+    DbSet<CaseTimelineEvent> CaseTimelineEvents { get; }
+    DbSet<QueueTicket> QueueTickets { get; }
 
-    // Hospitals
-    DbSet<Mawidy.Domain.Entities.Hospitals.Hospitals> Hospitals { get; set; }
-    DbSet<Mawidy.Domain.Entities.Hospitals.Beds> HospitalBeds { get; set; }
-    DbSet<Mawidy.Domain.Entities.Hospitals.BedTypes> HospitalBedTypes { get; set; }
-    DbSet<Mawidy.Domain.Entities.Hospitals.Reservations> HospitalReservations { get; set; }
-    DbSet<Mawidy.Domain.Entities.Hospitals.BlockedPhones> HospitalBlockedPhones { get; set; }
-    DbSet<Mawidy.Domain.Entities.Hospitals.Reports> HospitalReports { get; set; }
+    // ── Banks ───────────────────────────────────────────────────────────
+    DbSet<Mawidy.Domain.Entities.Banks.Service> BankServices { get; }
 
-    Task<int> SaveChangesAsync(CancellationToken cancellationToken);
+    // ── Hospitals ────────────────────────────────────────────────────────
+    DbSet<Mawidy.Domain.Entities.Hospitals.Hospitals> Hospitals { get; }
+    DbSet<Mawidy.Domain.Entities.Hospitals.Beds> HospitalBeds { get; }
+    DbSet<Mawidy.Domain.Entities.Hospitals.BedTypes> HospitalBedTypes { get; }
+    DbSet<Mawidy.Domain.Entities.Hospitals.Reservations> HospitalReservations { get; }
+    DbSet<Mawidy.Domain.Entities.Hospitals.BlockedPhones> HospitalBlockedPhones { get; }
+    DbSet<Mawidy.Domain.Entities.Hospitals.Reports> HospitalReports { get; }
+
+    Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

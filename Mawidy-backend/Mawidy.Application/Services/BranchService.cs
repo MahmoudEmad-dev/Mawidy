@@ -8,8 +8,8 @@ namespace Mawidy.Application.Services;
 
 public class BranchService : IBranchService
 {
-    private readonly IAppDbContext _db;
-    public BranchService(IAppDbContext db) => _db = db;
+    private readonly IApplicationDbContext _db;
+    public BranchService(IApplicationDbContext db) => _db = db;
 
     public async Task<BranchIndexViewModel> GetBranchListAsync(BranchFilterViewModel filter)
     {

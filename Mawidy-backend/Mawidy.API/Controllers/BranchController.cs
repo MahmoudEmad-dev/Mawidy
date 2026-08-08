@@ -12,9 +12,9 @@ public class BranchController : Controller
 {
     private readonly IBranchService      _branchSvc;
     private readonly IAppointmentService _apptSvc;
-    private readonly IAppDbContext        _db;
+    private readonly IApplicationDbContext        _db;
 
-    public BranchController(IBranchService branchSvc, IAppointmentService apptSvc, IAppDbContext db)
+    public BranchController(IBranchService branchSvc, IAppointmentService apptSvc, IApplicationDbContext db)
     {
         _branchSvc = branchSvc;
         _apptSvc   = apptSvc;

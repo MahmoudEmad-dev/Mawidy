@@ -8,8 +8,8 @@ namespace Mawidy.Application.Services;
 
 public class AppointmentService : IAppointmentService
 {
-    private readonly IAppDbContext _db;
-    public AppointmentService(IAppDbContext db) => _db = db;
+    private readonly IApplicationDbContext _db;
+    public AppointmentService(IApplicationDbContext db) => _db = db;
 
     public async Task<AppointmentCreateViewModel?> GetBookingFormAsync(int branchId, string? serviceKey = null)
     {

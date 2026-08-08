@@ -9,7 +9,7 @@ namespace Mawidy.Application.Services;
 
 public class AdminService : IAdminService
 {
-    private readonly IAppDbContext _db;
+    private readonly IApplicationDbContext _db;
 
     private static readonly Dictionary<string, (string Name, string Icon)> SvcInfo = new()
     {
@@ -25,7 +25,7 @@ public class AdminService : IAdminService
         ["land"]  = ("خط أرضي",          "☎️"),
     };
 
-    public AdminService(IAppDbContext db) => _db = db;
+    public AdminService(IApplicationDbContext db) => _db = db;
 
     // ── Dashboard ─────────────────────────────────────────────────────────────
     public async Task<AdminDashboardViewModel> GetDashboardAsync()
